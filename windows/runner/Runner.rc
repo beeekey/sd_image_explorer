@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "exif_viewer" "\0"
+            VALUE "FileDescription", "sd_image_explorer" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "exif_viewer" "\0"
+            VALUE "InternalName", "sd_image_explorer" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2023 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "exif_viewer.exe" "\0"
-            VALUE "ProductName", "exif_viewer" "\0"
+            VALUE "OriginalFilename", "sd_image_explorer.exe" "\0"
+            VALUE "ProductName", "sd_image_explorer" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

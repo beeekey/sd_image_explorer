@@ -1,2 +1,2 @@
-# exif_viewer
+# sd_image_explorer
  

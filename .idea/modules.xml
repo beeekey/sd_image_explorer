@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/exif_viewer.iml" filepath="$PROJECT_DIR$/exif_viewer.iml" />
-      <module fileurl="file://$PROJECT_DIR$/android/exif_viewer_android.iml" filepath="$PROJECT_DIR$/android/exif_viewer_android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sd_image_explorer.iml" filepath="$PROJECT_DIR$/sd_image_explorer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/sd_image_explorer_android.iml" filepath="$PROJECT_DIR$/android/sd_image_explorer_android.iml" />
     </modules>
   </component>
 </project>
