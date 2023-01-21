@@ -24,6 +24,7 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
   bool _init = true;
   bool _loading = true;
   List<File>? _files;
+  List<File>? _origFiles;
   File? _selectedFile;
   Map? _exifData;
   int _selectedIndex = 0;
@@ -31,6 +32,8 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
   final FocusNode _focusNode = FocusNode();
   String? selectedDirectory;
   int scrollTo = 0;
+  final _txtSearchController = TextEditingController();
+  String searchStr = "";
 
   void _handleKeyEvent(RawKeyEvent event) async {
     var offset = _scrollController.offset;
@@ -57,7 +60,10 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
     } else if (event.isKeyPressed(LogicalKeyboardKey.arrowRight)) {
       setState(() {
         if (kReleaseMode) {
-          // _selectedIndex += 1;
+          if (_selectedIndex < _files!.length - 1) {
+            _selectedIndex += 1;
+            _scrollController.jumpTo(scrollTo.toDouble());
+          }
         } else {
           if (_selectedIndex < _files!.length - 1) {
             _selectedIndex += 1;
@@ -69,7 +75,10 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
     } else if (event.isKeyPressed(LogicalKeyboardKey.arrowLeft)) {
       setState(() {
         if (kReleaseMode) {
-          // _selectedIndex += 1;
+          if (_selectedIndex < _files!.length - 1) {
+            _selectedIndex -= 1;
+            _scrollController.jumpTo(scrollTo.toDouble());
+          }
         } else {
           if (_selectedIndex >= 1) {
             _selectedIndex -= 1;
@@ -88,7 +97,10 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
       selectedDirectory = prefs.getString('selected_path');
 
       if (selectedDirectory != null) {
-        _files = await getFiles(selectedDirectory!);
+        _origFiles = await getFiles(selectedDirectory!);
+        if (searchStr == "") {
+          _files = _origFiles;
+        }
         _loading = false;
         // print(_files!.length);
       }
@@ -214,29 +226,53 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
     );
   }
 
+  void _txtSearch(BuildContext context) {
+    final searchStrIntern = _txtSearchController.text;
+
+    setState(() {
+      if (_origFiles != null) {
+        _files = _origFiles!
+            .where((f) => f.path
+                .toString()
+                .toLowerCase()
+                .contains(searchStrIntern.toLowerCase()))
+            .toList();
+      } else {
+        _files = _origFiles;
+      }
+
+      searchStr = searchStrIntern;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    int detailBoxWidth = 600;
+    if (!_loading && _files != null && _files!.isNotEmpty) {
+      int detailBoxWidth = 600;
 
-    double windowWidth = MediaQuery.of(context).size.width;
+      double windowWidth = MediaQuery.of(context).size.width;
 
-    int cols = (windowWidth - detailBoxWidth) ~/ 200;
-    int rows = (_files!.length) ~/ cols;
+      int cols = (windowWidth - detailBoxWidth) ~/ 200;
+      int rows = (_files!.length) ~/ cols;
 
-    double gridheight = rows * 200;
+      double gridheight = rows * 200;
 
-    scrollTo = (_selectedIndex ~/ cols) * (gridheight ~/ rows);
+      scrollTo = (_selectedIndex ~/ cols) * (gridheight ~/ rows);
+    }
 
     return Scaffold(
       appBar: AppBar(
         title: Text("$selectedDirectory"),
       ),
-      body: _loading
-          ? Center(
-              child: Column(
-                children: [const Text("No directory selected")],
-              ),
-            )
+      body: _loading || _files == null || _files!.isEmpty
+          ? searchStr != ""
+              ? const Center(
+                  child: Text(
+                      "No results found for the search in the filenames\n\nCurrently we are only searching in the filenames."),
+                )
+              : const Center(
+                  child: Text("No directory selected or no files found"),
+                )
           : RawKeyboardListener(
               autofocus: true,
               focusNode: _focusNode,
@@ -359,6 +395,51 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              SizedBox(
+                width: 200,
+                child: TextField(
+                  style: const TextStyle(color: Colors.white),
+                  controller: _txtSearchController,
+                  decoration: InputDecoration(
+                    enabledBorder: const UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    focusedBorder: const UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    border: const UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    hintStyle: const TextStyle(color: Colors.white),
+                    hintText: "Text suche:",
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        _txtSearchController.clear();
+                        _txtSearch(context);
+                      },
+                      icon: const Icon(
+                        Icons.clear,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  keyboardType: TextInputType.text,
+                  onSubmitted: (_) => _txtSearch(context),
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  _txtSearch(context);
+                },
+                icon: const Icon(
+                  Icons.search,
+                  size: 30,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(
+                width: 10,
+              ),
               ElevatedButton.icon(
                 onPressed: () {
                   setState(() {
@@ -373,10 +454,10 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
               ),
               ElevatedButton.icon(
                 onPressed: () async {
-                  _files = await getFiles(selectedDirectory!);
-
+                  List<File> newFiles = await getFiles(selectedDirectory!);
                   setState(() {
-                    _files = _files!;
+                    _origFiles = newFiles;
+                    _files = newFiles;
                   });
                 },
                 icon: const Icon(Icons.refresh),
