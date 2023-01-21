@@ -80,7 +80,7 @@ class _LandingScreenState extends State<LandingScreen> {
                 children: [
                   ElevatedButton(
                       onPressed: () async {
-                        selectPath();
+                        await selectPath();
                         Navigator.of(context)
                             .pushNamed(ImageGridScreen.routeName);
                       },
