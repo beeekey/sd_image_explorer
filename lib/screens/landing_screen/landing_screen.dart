@@ -81,8 +81,11 @@ class _LandingScreenState extends State<LandingScreen> {
                   ElevatedButton(
                       onPressed: () async {
                         await selectPath();
-                        Navigator.of(context)
-                            .pushNamed(ImageGridScreen.routeName);
+
+                        if (_path != null) {
+                          Navigator.of(context)
+                              .pushNamed(ImageGridScreen.routeName);
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                           primary: Colors.amberAccent,
