@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 
@@ -31,9 +32,12 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
   ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
   String? selectedDirectory;
-  int scrollTo = 0;
+  double scrollTo = 0;
   final _txtSearchController = TextEditingController();
   String searchStr = "";
+  GlobalKey _keySize = GlobalKey();
+  double newImgBoxWidth = 200;
+  double newImgBoxHeight = 200;
 
   void _handleKeyEvent(RawKeyEvent event) async {
     var offset = _scrollController.offset;
@@ -62,12 +66,12 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
         if (kReleaseMode) {
           if (_selectedIndex < _files!.length - 1) {
             _selectedIndex += 1;
-            _scrollController.jumpTo(scrollTo.toDouble());
+            _scrollController.jumpTo(scrollTo);
           }
         } else {
           if (_selectedIndex < _files!.length - 1) {
             _selectedIndex += 1;
-            _scrollController.jumpTo(scrollTo.toDouble());
+            _scrollController.jumpTo(scrollTo);
           }
         }
       });
@@ -77,12 +81,12 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
         if (kReleaseMode) {
           if (_selectedIndex < _files!.length - 1) {
             _selectedIndex -= 1;
-            _scrollController.jumpTo(scrollTo.toDouble());
+            _scrollController.jumpTo(scrollTo);
           }
         } else {
           if (_selectedIndex >= 1) {
             _selectedIndex -= 1;
-            _scrollController.jumpTo(scrollTo.toDouble());
+            _scrollController.jumpTo(scrollTo);
           }
         }
       });
@@ -245,19 +249,26 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
     });
   }
 
+  void postFrameCallback(_) {
+    var context = _keySize.currentContext;
+    if (context == null) return;
+
+    newImgBoxWidth = context.size!.width;
+    newImgBoxHeight = context.size!.height;
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (!_loading && _files != null && _files!.isNotEmpty) {
-      int detailBoxWidth = 600;
+    SchedulerBinding.instance.addPostFrameCallback(postFrameCallback);
+    int detailBoxWidth = 600;
 
+    if (!_loading && _files != null && _files!.isNotEmpty) {
       double windowWidth = MediaQuery.of(context).size.width;
 
-      int cols = (windowWidth - detailBoxWidth) ~/ 200;
+      int cols = (windowWidth - detailBoxWidth) ~/ newImgBoxWidth;
       int rows = (_files!.length) ~/ cols;
 
-      double gridheight = rows * 200;
-
-      scrollTo = (_selectedIndex ~/ cols) * (gridheight ~/ rows);
+      scrollTo = ((_selectedIndex ~/ cols) * (newImgBoxHeight + 20));
     }
 
     return Scaffold(
@@ -302,6 +313,7 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
                               itemCount: _files!.length,
                               itemBuilder: (BuildContext ctx, index) {
                                 return InkWell(
+                                  key: index == 0 ? _keySize : null,
                                   onTap: () async {
                                     await readImageData(_files![index]);
                                     setState(() {
@@ -337,13 +349,13 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: SizedBox(
-                        width: 600,
+                        width: detailBoxWidth.toDouble(),
                         child: _selectedFile != null
                             ? Column(
                                 children: [
                                   Image.file(
                                     _selectedFile!,
-                                    width: 600,
+                                    width: detailBoxWidth.toDouble(),
                                     fit: BoxFit.scaleDown,
                                   ),
                                   const SizedBox(
@@ -411,7 +423,7 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
                       borderSide: BorderSide(color: Colors.white),
                     ),
                     hintStyle: const TextStyle(color: Colors.white),
-                    hintText: "Text suche:",
+                    hintText: "Text search:",
                     suffixIcon: IconButton(
                       onPressed: () {
                         _txtSearchController.clear();
