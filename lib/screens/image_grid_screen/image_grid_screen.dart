@@ -12,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import '../../helpers/search_files.dart';
+import '../app_drawer.dart';
 
 class ImageGridScreen extends StatefulWidget {
   static const routeName = "/image/grid";
@@ -163,10 +164,10 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
     String negativePrompt = "";
 
     if (dataList.length >= 3) {
-      negativePrompt = dataList[1];
-      parameters = dataList[2];
+      negativePrompt = dataList[1].replaceAll("Negative prompt: ", "");
+      parameters = dataList[2].replaceAll(", ", "\n");
     } else if (dataList.length == 2) {
-      parameters = dataList[1];
+      parameters = dataList[1].replaceAll(", ", "\n");
     }
     parameters = parameters
         .replaceAll(
@@ -193,8 +194,8 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
             labelStyle: TextStyle(
                 color: Colors.black87, fontSize: 17, fontFamily: 'AvenirLight'),
           ),
-          key: Key(dataList[0]), // <- Magic!
-          initialValue: dataList[0],
+          key: Key(dataList[0].replaceAll("parameters: ", "")), // <- Magic!
+          initialValue: dataList[0].replaceAll("parameters:", ""),
           minLines: 2,
           maxLines: 10,
           readOnly: true,
@@ -275,15 +276,18 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
       appBar: AppBar(
         title: Text("$selectedDirectory"),
       ),
+      drawer: const MyAppDrawer(),
       body: _loading || _files == null || _files!.isEmpty
           ? searchStr != ""
               ? const Center(
                   child: Text(
                       "No results found for the search in the filenames\n\nCurrently we are only searching in the filenames."),
                 )
-              : const Center(
-                  child: Text("No directory selected or no files found"),
-                )
+              : _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : const Center(
+                      child: Text("No directory selected or no files found"),
+                    )
           : RawKeyboardListener(
               autofocus: true,
               focusNode: _focusNode,
@@ -320,24 +324,26 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
                                       _selectedIndex = index;
                                     });
                                   },
-                                  child: Container(
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                        border: index == _selectedIndex
-                                            ? Border.all(
-                                                color: Colors.amber, width: 4)
-                                            : Border.all(
-                                                color: const Color.fromARGB(
-                                                    0, 68, 137, 255),
-                                                width: 0,
-                                              ),
-                                        image: DecorationImage(
-                                          image: FileImage(_files![index]),
-                                          fit: BoxFit.cover,
-                                        ),
-                                        color: Colors.amber,
-                                        borderRadius:
-                                            BorderRadius.circular(15)),
+                                  child: GridTile(
+                                    child: Container(
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                          border: index == _selectedIndex
+                                              ? Border.all(
+                                                  color: Colors.amber, width: 4)
+                                              : Border.all(
+                                                  color: const Color.fromARGB(
+                                                      0, 68, 137, 255),
+                                                  width: 0,
+                                                ),
+                                          image: DecorationImage(
+                                            image: FileImage(_files![index]),
+                                            fit: BoxFit.cover,
+                                          ),
+                                          color: Colors.amber,
+                                          borderRadius:
+                                              BorderRadius.circular(15)),
+                                    ),
                                   ),
                                 );
                               }),
@@ -390,7 +396,21 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
                                             "${element.key} : ${element.value}",
                                             softWrap: true,
                                           );
-                                  }).toList()
+                                  }).toList(),
+                                  TextFormField(
+                                    decoration: const InputDecoration(
+                                      labelText: 'File path:',
+                                      labelStyle: TextStyle(
+                                          color: Colors.black87,
+                                          fontSize: 17,
+                                          fontFamily: 'AvenirLight'),
+                                    ),
+                                    key: Key(_selectedFile!.path), // <- Magic!
+                                    initialValue: _selectedFile!.path,
+                                    minLines: 2,
+                                    maxLines: 10,
+                                    readOnly: true,
+                                  )
                                 ],
                               )
                             : Container(),
@@ -467,7 +487,10 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
               ElevatedButton.icon(
                 onPressed: () async {
                   List<File> newFiles = await getFiles(selectedDirectory!);
+                  await readImageData(_files![0]);
+                  _scrollController.jumpTo(0);
                   setState(() {
+                    _selectedIndex = 0;
                     _origFiles = newFiles;
                     _files = newFiles;
                   });

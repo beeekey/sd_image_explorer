@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../app_drawer.dart';
 import '../image_grid_screen/image_grid_screen.dart';
 
 class LandingScreen extends StatefulWidget {
@@ -146,8 +147,8 @@ class _LandingScreenState extends State<LandingScreen> {
                                   setState(() {
                                     _path = e;
                                   });
-                                  Navigator.of(context)
-                                      .pushNamed(ImageGridScreen.routeName);
+                                  Navigator.of(context).pushReplacementNamed(
+                                      ImageGridScreen.routeName);
                                 },
                                 child: Text(e)),
                             const SizedBox(
