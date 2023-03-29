@@ -23,7 +23,9 @@ https://github.com/beeekey/sd_image_explorer/releases
 
 (if somebody can compile it for linux, feel free to do so ...)
 
-## Installation
+Unzip the file and run the *.exe or *.app
+
+## Building from source
 
 1. Clone or download the repository
 2. Open the project in your favorite editor
